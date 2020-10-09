@@ -4,6 +4,7 @@ export default class Game extends Phaser.Scene{
 /** @type {Phaser.Physics.Arcade.Sprite} */
     platforms
     player
+    sceneHeight
     constructor(){
         super('game')
     }
@@ -26,10 +27,10 @@ export default class Game extends Phaser.Scene{
 
         this.platforms = this.physics.add.staticGroup()
 
-        const sceneHeight = this.game.config.height
-        console.log(sceneHeight)
+        this.sceneHeight = this.game.config.height
+        console.log(this.sceneHeight)
 
-        const maxNumOfPlatforms = Math.ceil(sceneHeight/150)
+        const maxNumOfPlatforms = Math.ceil(this.sceneHeight/150)+1
         console.log(maxNumOfPlatforms)
         for(let i = 0 ;i < parseInt(maxNumOfPlatforms);i++){
 
@@ -46,7 +47,7 @@ export default class Game extends Phaser.Scene{
             body.updateFromGameObject()
         }
         
-        this.player = this.physics.add.sprite(240,sceneHeight/2,'bunny-stand').setScale(0.5)
+        this.player = this.physics.add.sprite(240,this.sceneHeight/2,'bunny-stand').setScale(0.5)
         this.physics.add.collider(this.platforms,this.player)
 
         this.cameras.main.startFollow(this.player)
@@ -59,17 +60,17 @@ export default class Game extends Phaser.Scene{
 
             const scrollY = this.cameras.main.scrollY
 
-            if(platform.y >= scrollY+700){
-                platform.y = scrollY - Phaser.Math.Between(50, 100)
+            if(platform.y >= scrollY+this.sceneHeight+(this.sceneHeight*.2)){
+                platform.y = scrollY - Phaser.Math.Between(80,140)
                 platform.body.updateFromGameObject()
             }
         })
 
         const touchingDown = this.player.body.touching.down
 
-        // if(touchingDown){
-        //     this.player.setVelocityY(-300)
-        // }
+        if(touchingDown){
+            this.player.setVelocityY(-300)
+        }
 
         this.player.body.checkCollision.up = false
         this.player.body.checkCollision.right = false
