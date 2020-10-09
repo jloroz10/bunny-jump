@@ -26,7 +26,12 @@ export default class Game extends Phaser.Scene{
 
         this.platforms = this.physics.add.staticGroup()
 
-        for(let i = 0 ;i < 5;i++){
+        const sceneHeight = this.game.config.height
+        console.log(sceneHeight)
+
+        const maxNumOfPlatforms = Math.ceil(sceneHeight/150)
+        console.log(maxNumOfPlatforms)
+        for(let i = 0 ;i < parseInt(maxNumOfPlatforms);i++){
 
             const x = Phaser.Math.Between(80,400) //to keep the platform inside the screen
             const y = i * 150
@@ -41,7 +46,7 @@ export default class Game extends Phaser.Scene{
             body.updateFromGameObject()
         }
         
-        this.player = this.physics.add.sprite(240,320,'bunny-stand').setScale(0.5)
+        this.player = this.physics.add.sprite(240,sceneHeight/2,'bunny-stand').setScale(0.5)
         this.physics.add.collider(this.platforms,this.player)
 
         this.cameras.main.startFollow(this.player)
@@ -62,9 +67,9 @@ export default class Game extends Phaser.Scene{
 
         const touchingDown = this.player.body.touching.down
 
-        if(touchingDown){
-            this.player.setVelocityY(-300)
-        }
+        // if(touchingDown){
+        //     this.player.setVelocityY(-300)
+        // }
 
         this.player.body.checkCollision.up = false
         this.player.body.checkCollision.right = false
