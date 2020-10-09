@@ -5,6 +5,10 @@ export default class Game extends Phaser.Scene{
     platforms
     player
     sceneHeight
+
+    /** @type {Phaser.Types.Input.Keyboard.CursorKeys} */
+    cursor
+
     constructor(){
         super('game')
     }
@@ -14,6 +18,9 @@ export default class Game extends Phaser.Scene{
         this.load.image('platform','assets/png/environment/ground_grass.png');
 
         this.load.image('bunny-stand','assets/png/players/bunny1_stand.png');
+
+        this.cursor = this.input.keyboard.createCursorKeys()
+
     }
 
     create(){
@@ -53,14 +60,14 @@ export default class Game extends Phaser.Scene{
         this.cameras.main.startFollow(this.player)
     }
 
-    update(){
+    update(t,dt){
 
         this.platforms.children.iterate(child =>{
             const platform = child
 
             const scrollY = this.cameras.main.scrollY
 
-            if(platform.y >= scrollY+this.sceneHeight+(this.sceneHeight*.2)){
+            if(platform.y >= scrollY+this.sceneHeight+(this.sceneHeight*.3)){
                 platform.y = scrollY - Phaser.Math.Between(80,140)
                 platform.body.updateFromGameObject()
             }
@@ -70,6 +77,17 @@ export default class Game extends Phaser.Scene{
 
         if(touchingDown){
             this.player.setVelocityY(-300)
+        }
+
+        //left and right input logic
+        if(this.cursor.left.isDown && !touchingDown){
+            this.player.setVelocityX(-200)
+        }
+        else if(this.cursor.right.isDown && !touchingDown){
+            this.player.setVelocityX(200)
+        }
+        else{
+            this.player.setVelocityX(0)
         }
 
         this.player.body.checkCollision.up = false
