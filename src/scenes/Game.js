@@ -58,6 +58,9 @@ export default class Game extends Phaser.Scene{
         this.physics.add.collider(this.platforms,this.player)
 
         this.cameras.main.startFollow(this.player)
+        this.cameras.main.setDeadzone(this.scale.width *1.5)
+
+
     }
 
     update(t,dt){
@@ -93,5 +96,22 @@ export default class Game extends Phaser.Scene{
         this.player.body.checkCollision.up = false
         this.player.body.checkCollision.right = false
         this.player.body.checkCollision.left = false
+
+        this.horizontalWrap(this.player)
+    }
+
+    horizontalWrap(sprite){
+
+        
+        const halfWidth = sprite.displayWidth * 0.5
+        const gameWidth = this.scale.width
+
+        console.log(sprite.x)
+        if(sprite.x < -halfWidth){
+            sprite.x = gameWidth + halfWidth
+        }
+        else if(sprite.x  > gameWidth + halfWidth){
+            sprite.x = -halfWidth
+        }
     }
 }
