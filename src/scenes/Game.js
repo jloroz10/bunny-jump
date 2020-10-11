@@ -21,14 +21,18 @@ export default class Game extends Phaser.Scene{
         super('game')
     }
 
+    init(){
+        this.carrotsCollected = 0
+    }
     preload(){
         this.load.image('background','assets/png/background/bg_layer1.png')
         this.load.image('platform','assets/png/environment/ground_grass.png');
 
         this.load.image('bunny-stand','assets/png/players/bunny1_stand.png');
+        this.load.image('bunny-jump','assets/png/players/bunny1_jump.png');
         this.load.image('carrot','assets/png/items/carrot.png');
         this.cursor = this.input.keyboard.createCursorKeys()
-
+        this.load.audio('jump', 'assets/sfx/phaseJump1.ogg')
     }
 
     create(){
@@ -43,10 +47,11 @@ export default class Game extends Phaser.Scene{
         this.platforms = this.physics.add.staticGroup()
 
         this.sceneHeight = this.game.config.height
-        console.log(this.sceneHeight)
+
+        // console.log(this.sceneHeight)
 
         const maxNumOfPlatforms = Math.ceil(this.sceneHeight/150)+1
-        console.log(maxNumOfPlatforms)
+
         for(let i = 0 ;i < parseInt(maxNumOfPlatforms);i++){
 
             const x = Phaser.Math.Between(80,400) //to keep the platform inside the screen
@@ -90,6 +95,8 @@ export default class Game extends Phaser.Scene{
         this.carrotsCollectedText = this.add.text(240,10,'Carrots: 0', style)
                 .setScrollFactor(0)
                 .setOrigin(0.5,0)
+
+    
     }
 
     update(t,dt){
@@ -110,8 +117,8 @@ export default class Game extends Phaser.Scene{
 
             const scrollY = this.cameras.main.scrollY
 
-            if(platform.y >= scrollY+this.sceneHeight+(this.sceneHeight*.2)){
-                platform.y = scrollY - Phaser.Math.Between(90,120)
+            if(platform.y >= scrollY+this.sceneHeight+(this.sceneHeight*.18)){
+                platform.y = scrollY - Phaser.Math.Between(130,160)
                 platform.body.updateFromGameObject()
 
                 //create a carrot above the platforms
@@ -123,6 +130,14 @@ export default class Game extends Phaser.Scene{
 
         if(touchingDown){
             this.player.setVelocityY(-300)
+
+            this.player.setTexture('bunny-jump')
+            this.sound.play('jump')
+        }
+
+        const vy = this.player.body.velocity.y
+        if(vy > 0 && this.player.texture.key !== 'bunny-stand'){
+            this.player.setTexture('bunny-stand')
         }
 
         //left and right input logic
@@ -144,7 +159,9 @@ export default class Game extends Phaser.Scene{
 
         const bottomPlatform = this.findBottomMostPlatform()
         if(this.player.y > bottomPlatform.y + 200){
-            console.log('Game Over')
+            //console.log('Game Over')
+
+            this.scene.start('game-over')
         }
     }
 
