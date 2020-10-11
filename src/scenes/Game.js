@@ -1,11 +1,13 @@
 import Phaser from '../lib/phaser.js';
 
+import Carrot from '../game/Carrots.js'
+
 export default class Game extends Phaser.Scene{
 /** @type {Phaser.Physics.Arcade.Sprite} */
     platforms
     player
     sceneHeight
-
+    carrots
     /** @type {Phaser.Types.Input.Keyboard.CursorKeys} */
     cursor
 
@@ -18,7 +20,7 @@ export default class Game extends Phaser.Scene{
         this.load.image('platform','assets/png/environment/ground_grass.png');
 
         this.load.image('bunny-stand','assets/png/players/bunny1_stand.png');
-
+        this.load.image('carrot','assets/png/items/carrot.png');
         this.cursor = this.input.keyboard.createCursorKeys()
 
     }
@@ -60,7 +62,14 @@ export default class Game extends Phaser.Scene{
         this.cameras.main.startFollow(this.player)
         this.cameras.main.setDeadzone(this.scale.width *1.5)
 
+        //Creating carrots
 
+        this.carrots = this.physics.add.group({
+            classType:Carrot
+        })
+
+        this.carrots.get(240,320,'carrot')
+        this.physics.add.collider(this.platforms,this.carrots)
     }
 
     update(t,dt){
@@ -73,6 +82,9 @@ export default class Game extends Phaser.Scene{
             if(platform.y >= scrollY+this.sceneHeight+(this.sceneHeight*.3)){
                 platform.y = scrollY - Phaser.Math.Between(80,140)
                 platform.body.updateFromGameObject()
+
+                //create a carrot above the platforms
+                this.addCarrotAbove(platform)
             }
         })
 
@@ -100,6 +112,9 @@ export default class Game extends Phaser.Scene{
         this.horizontalWrap(this.player)
     }
 
+    /**
+     * @param {Phaser.GameObjects.Sprite} sprite
+    */
     horizontalWrap(sprite){
 
         
@@ -113,5 +128,23 @@ export default class Game extends Phaser.Scene{
         else if(sprite.x  > gameWidth + halfWidth){
             sprite.x = -halfWidth
         }
+    }
+
+    /**
+    * @param {Phaser.GameObjects.Sprite} sprite
+    */
+    addCarrotAbove(sprite){
+        const y = sprite.y - sprite.displayHeight
+
+        /** @type {Phaser.Physics.Arcade.Sprite} */
+        const carrot = this.carrots.get(sprite.x,y,'carrot')
+
+        this.add.existing(carrot)
+
+        //updating the physics body size
+        carrot.body.setSize(carrot.width,carrot.height)
+        
+        return carrot
+
     }
 }
