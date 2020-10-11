@@ -3,13 +3,19 @@ import Phaser from '../lib/phaser.js';
 import Carrot from '../game/Carrots.js'
 
 export default class Game extends Phaser.Scene{
-/** @type {Phaser.Physics.Arcade.Sprite} */
+    carrotsCollected = 0
+
+    /**@type {Phaser.GameObject.Text} */
+    carrotsCollectedText
+    /** @type {Phaser.Physics.Arcade.Sprite} */
     platforms
     player
     sceneHeight
     carrots
     /** @type {Phaser.Types.Input.Keyboard.CursorKeys} */
     cursor
+
+    
 
     constructor(){
         super('game')
@@ -68,19 +74,44 @@ export default class Game extends Phaser.Scene{
             classType:Carrot
         })
 
-        this.carrots.get(240,320,'carrot')
+        // this.carrots.get(240,320,'carrot')
         this.physics.add.collider(this.platforms,this.carrots)
+     
+
+        this.physics.add.overlap(
+            this.player,
+            this.carrots,
+            this.handleCollectCarrot,
+            undefined,
+            this //to know in which scene the method (handleCollectCarrot) that is being call when the two objects overlap
+        )
+
+        const style ={color:'#000', fontSize:24}
+        this.carrotsCollectedText = this.add.text(240,10,'Carrots: 0', style)
+                .setScrollFactor(0)
+                .setOrigin(0.5,0)
     }
 
     update(t,dt){
 
+        console.log(this.carrots.children.entries.length)
+
+        this.carrots.children.iterate(child=>{
+            const carrot = child
+
+            const scrollY = this.cameras.main.scrollY
+
+            if(carrot >=  scrollY+this.sceneHeight+(this.sceneHeight*.2)){
+                this.deleteMissingCarrots(carrot)
+            }
+        })
         this.platforms.children.iterate(child =>{
             const platform = child
 
             const scrollY = this.cameras.main.scrollY
 
-            if(platform.y >= scrollY+this.sceneHeight+(this.sceneHeight*.3)){
-                platform.y = scrollY - Phaser.Math.Between(80,140)
+            if(platform.y >= scrollY+this.sceneHeight+(this.sceneHeight*.2)){
+                platform.y = scrollY - Phaser.Math.Between(90,120)
                 platform.body.updateFromGameObject()
 
                 //create a carrot above the platforms
@@ -110,6 +141,11 @@ export default class Game extends Phaser.Scene{
         this.player.body.checkCollision.left = false
 
         this.horizontalWrap(this.player)
+
+        const bottomPlatform = this.findBottomMostPlatform()
+        if(this.player.y > bottomPlatform.y + 200){
+            console.log('Game Over')
+        }
     }
 
     /**
@@ -121,7 +157,7 @@ export default class Game extends Phaser.Scene{
         const halfWidth = sprite.displayWidth * 0.5
         const gameWidth = this.scale.width
 
-        console.log(sprite.x)
+      //  console.log(sprite.x)
         if(sprite.x < -halfWidth){
             sprite.x = gameWidth + halfWidth
         }
@@ -134,17 +170,71 @@ export default class Game extends Phaser.Scene{
     * @param {Phaser.GameObjects.Sprite} sprite
     */
     addCarrotAbove(sprite){
+
         const y = sprite.y - sprite.displayHeight
 
         /** @type {Phaser.Physics.Arcade.Sprite} */
+        
         const carrot = this.carrots.get(sprite.x,y,'carrot')
 
+        
+        carrot.setActive(true)
+        carrot.setVisible(true)
+
         this.add.existing(carrot)
+
 
         //updating the physics body size
         carrot.body.setSize(carrot.width,carrot.height)
         
+        this.physics.world.enable(carrot)
+
         return carrot
 
+    }
+
+    /**
+     * @param {Phaser.Physics.Arcade.Sprite} player
+     * @param {Carrot} carrot
+     */
+    handleCollectCarrot(player,carrot){
+        //hide from display
+        this.carrots.killAndHide(carrot)
+
+        //disable from physics world
+        this.physics.world.disableBody(carrot.body)
+
+        this.carrotsCollected++
+
+        const value = `Carrots: ${this.carrotsCollected}`
+        this.carrotsCollectedText.text= value
+    }
+
+    /**
+     * @param {Carrot} carrot
+     */
+    deleteMissingCarrots(carrot){
+        this.carrots.killAndHide(carrot)
+
+        //disable from physics world
+        this.physics.world.disableBody(carrot.body)
+    }
+
+    findBottomMostPlatform(){
+
+        const platforms = this.platforms.getChildren()
+        let bottomPlaftorm = platforms[0]
+
+        for(let i = 1; i < platforms.length;i++){
+            const platform = platforms[i]
+
+            if(platform.y < bottomPlaftorm.y){
+                continue
+            }
+
+            bottomPlaftorm = platform
+        }
+
+        return bottomPlaftorm
     }
 }
